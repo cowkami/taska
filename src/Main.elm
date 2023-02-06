@@ -32,8 +32,8 @@ type alias Tasks =
     Dict String Task
 
 
-emptyTasks : Tasks
-emptyTasks =
+initTasks : Tasks
+initTasks =
     Dict.empty
 
 
@@ -43,7 +43,7 @@ type alias Model =
 
 init : Model
 init =
-    { tasks = emptyTasks }
+    { tasks = initTasks }
 
 
 
