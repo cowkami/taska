@@ -1,0 +1,18 @@
+[package]
+edition = "2021"
+name = "taska-api"
+version = "0.1.0"
+
+[dependencies]
+url = "2.2.2"
+anyhow = "1.0.65"
+tokio = { version = "1.21.1", features = ["full"] }
+axum = "0.5.16"
+lambda-web = { version = "0.2.0", features = ["hyper"] }
+lambda_runtime = "0.7.0"
+
+domain = { path = "../domain" }
+usecase = { path = "../usecase" }
+api_server = { path = "../infra/api_server" }
+app_context = { path = "../context/app_context" }
+error = { path = "../common/error" }
