@@ -1,0 +1,65 @@
+name: CI
+
+on: [push]
+
+env:
+  AWS_ARN: arn:aws:iam::553685767236:role/lambda
+  LAMBDA_NAME_PROD: marimari-api-prod
+  LAMBDA_NAME_DEV: marimari-api-dev
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+      - uses: actions-rs/cargo@v1
+      - name: API Test
+        run: cargo test
+        working-directory: app
+      - name: Domain Test
+        run: cargo test
+        working-directory: domain
+      - name: Usecase Test
+        run: cargo test
+        working-directory: usecase
+
+  deploy:
+    name: Deploy API to AWS Lambda
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+      - uses: actions-rs/cargo@v1
+      - uses: goto-bus-stop/setup-zig@v1
+        with:
+          version: 0.9.1
+      - uses: zerj9/setup-cargo-lambda@v0.1.0
+      - uses: aws-actions/configure-aws-credentials@v1
+        with:
+          role-to-assume: ${{ env.AWS_ARN }}
+          aws-region: ap-northeast-1
+      - name: Check if aws cli configuration is done.
+        run: aws sts get-caller-identity
+      - name: Build AWS Lambda Function
+        run: |
+          cargo lambda build
+        working-directory: app
+      - name: Deploy API to AWS Lambda for product
+        if: ${{ github.ref_name == 'main' }}
+        run: |
+          cargo lambda deploy --binary-name marimari-api --enable-function-url ${{ env.LAMBDA_NAME_PROD }} --iam-role $AWS_ARN
+        working-directory: app
+      - name: Deploy API to AWS Lambda for development
+        if: ${{ github.ref_name != 'main' }}
+        run: |
+          cargo lambda deploy --binary-name marimari-api --enable-function-url ${{ env.LAMBDA_NAME_DEV }} --iam-role $AWS_ARN
+        working-directory: app
